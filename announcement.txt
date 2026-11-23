@@ -1,0 +1,134 @@
+
+@echo off
+setlocal
+title The Paradox
+
+set "SELF=%~f0"
+set "PSFILE=%TEMP%\the_paradox_presentation.ps1"
+
+:: Generate the PowerShell presentation.
+(
+echo Add-Type -AssemblyName System.Windows.Forms
+echo Add-Type -AssemblyName System.Drawing
+echo.
+echo $form = New-Object System.Windows.Forms.Form
+echo $form.WindowState = 'Maximized'
+echo $form.FormBorderStyle = 'None'
+echo $form.BackColor = [Drawing.Color]::Black
+echo $form.TopMost = $true
+echo $form.KeyPreview = $true
+echo.
+echo $label = New-Object System.Windows.Forms.Label
+echo $label.Dock = 'Fill'
+echo $label.TextAlign = 'MiddleCenter'
+echo $label.ForeColor = [Drawing.Color]::White
+echo $label.BackColor = [Drawing.Color]::Black
+echo $label.Font = New-Object Drawing.Font^('Segoe UI',25^)
+echo $label.Padding = New-Object System.Windows.Forms.Padding^(100^)
+echo $form.Controls.Add^($label^)
+echo.
+echo $slides = @^(
+echo     ,@^('Why hello there.',3^)
+echo     ,@^('You''re here. Finally.',3^)
+echo     ,@^('Well, yeah. I''m supposed to give some dramatic speech here.',4^)
+echo     ,@^('But that''s too boring.',3^)
+echo     ,@^('And I''m also supposed to just tell you the ANNOUNCEMENT here.',4^)
+echo     ,@^('But that''s also too boring.',3^)
+echo     ,@^('So. Since I am such a cruel, pathetic excuse for a human being...',4^)
+echo     ,@^('How about you wait like, let''s say...',3^)
+echo     ,@^('10 seconds-',1^)
+echo     ,@^('59 minutes.',3^)
+echo     ,@^('Yes. 59 minutes of silence and darkness.',4^)
+echo     ,@^('Well, that''s not too fun for you, is it?',3^)
+echo     ,@^('But considering how easily you felled my puzzles, a little wait can''t hurt, right?',5^)
+echo     ,@^('Well, I''ll start the timer now.',3^)
+echo     ,@^('OH WAIT.',2^)
+echo     ,@^('You could just set a timer on your phone and go doomscroll while you wait, couldn''t you?',5^)
+echo     ,@^('Then you''d get back and practically skip the apathy.',4^)
+echo     ,@^('That''s unacceptable.',3^)
+echo     ,@^('Hmm. I won''t tell you how long the timer is, then.',4^)
+echo     ,@^('It''s for you to find out.',3^)
+echo     ,@^('And nope, you can''t Alt-Tab away. I think.',3^)
+echo     ,@^('Can you check for me?',3^)
+echo     ,@^('Yep. No, you also cannot close this window since it will change itself.',5^)
+echo     ,@^('And the ANNOUNCEMENT will only be available for 5 seconds.',4^)
+echo     ,@^('Miss it, and welp, you can go through this thing again, I suppose.',5^)
+echo     ,@^('Well, I think that''s all.',3^)
+echo     ,@^('Ready for the big wait?',3^)
+echo     ,@^('Alright. Here it comes.',3^)
+echo ^)
+echo.
+echo $script:index = 0
+echo $script:remaining = [int]$slides[0][1]
+echo $label.Text = $slides[0][0]
+echo $timer = New-Object System.Windows.Forms.Timer
+echo $timer.Interval = 1000
+echo.
+echo $timer.Add_Tick^({
+echo     $script:remaining = [int]$script:remaining - 1
+echo     if ^($script:remaining -le 0^) {
+echo         $script:index++
+echo         if ^($script:index -ge $slides.Count^) {
+echo             $timer.Stop^(^)
+echo             $label.Text = ''
+echo             $form.Refresh^(^)
+echo             Start-Sleep -Seconds 20
+echo             $finalSlides = @^(
+echo                 ,@^('Well, you made it',3^)
+echo                 ,@^('That was enough time for me to compose these final lines.',4^)
+echo                 ,@^('Ahem.',2^)
+echo                 ,@^('Quite a journey, wasn''t it?',3^)
+echo                 ,@^('Numbers. Images. Words.',3^)
+echo                 ,@^('Things that had no reason to be together.',4^)
+echo                 ,@^('Until they did.',3^)
+echo                 ,@^('Nothing was where it should be.',4^)
+echo                 ,@^('And yet, everything was right where it belonged.',5^)
+echo                 ,@^('Anyways, enough drama.',3^)
+echo                 ,@^('and i wouldnt mind being one.',5^)
+echo             ^)
+echo             foreach ^($slide in $finalSlides^) {
+echo                 $label.Text = $slide[0]
+echo                 $form.Refresh^(^)
+echo                 Start-Sleep -Seconds $slide[1]
+echo             }
+echo             $form.Close^(^)
+echo             return
+echo         }
+echo         $label.Text = $slides[$script:index][0]
+echo         $script:remaining = [int]$slides[$script:index][1]
+echo     }
+echo }^)
+echo.
+echo $form.Add_Shown^({$timer.Start^(^)}^)
+echo $form.Add_KeyDown^({
+echo     if ^($_.KeyCode -eq 'Escape'^) {
+echo         $timer.Stop^(^)
+echo         $form.Close^(^)
+echo     }
+echo }^)
+echo [void]$form.ShowDialog^(^)
+) > "%PSFILE%"
+
+:: Run the presentation.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PSFILE%"
+
+:: Wait briefly, then transform the batch file.
+timeout /t 2 /nobreak >nul
+
+(
+echo @echo off
+echo title
+echo color 0D
+echo cls
+echo echo.
+echo echo.
+echo echo.
+echo echo       what are you here for
+echo echo.
+echo echo.
+echo echo.
+echo pause
+) > "%SELF%"
+
+del "%PSFILE%" >nul 2>&1
+exit
